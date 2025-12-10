@@ -1,0 +1,52 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Netlify
+.netlify/
+.netlify.state
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+.cache/
+
+# Build outputs (si los tuvieras)
+dist/
+build/
+
+# R files
+.Rhistory
+.RData
+
+# Archivos de prueba privados
+test-*.html
+datos-para-google-sheets.txt
+
+# Archivos con credenciales sensibles
+Code.gs
+
+# Documentos internos (opcional, puedes comentar si quieres subirlos)
+DIAGNOSTICO-*.md
+RESUMEN-*.md
