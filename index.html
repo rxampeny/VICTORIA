@@ -2343,11 +2343,15 @@
             const currentMonth = parseInt(mesSelector.value);
             console.log('📅 Mes actual:', currentMonth);
 
-            // Refrescar vista actual (calendario o gráfico)
-            if (currentView === 'chart') {
+            // Detectar quin tipus de vista està visible
+            const calendarView = document.getElementById('calendarView');
+            const chartContainer = document.getElementById('chartContainer');
+
+            // Refrescar vista actual basant-nos en què està visible al DOM
+            if (chartContainer && chartContainer.style.display !== 'none') {
                 console.log('📈 Refrescant gràfic...');
                 actualitzarGrafic(currentMonth);
-            } else {
+            } else if (calendarView) {
                 console.log('📆 Refrescant calendari...');
                 renderCalendar(currentMonth, currentYear);
             }
