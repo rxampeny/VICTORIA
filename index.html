@@ -2199,7 +2199,7 @@
         let currentYear = new Date().getFullYear();
 
         // Función para cargar datos desde Google Sheets (con fallback a localStorage)
-        async function loadDataFromStorage() {
+        async function loadDataFromStorage(refreshUI = false) {
             // Mostrar indicador de carga (DESACTIVADO)
             // const loadingDiv = document.createElement('div');
             // loadingDiv.id = 'loadingIndicator';
@@ -2266,6 +2266,12 @@
                 // Quitar indicador de carga (DESACTIVADO)
                 // loadingDiv.remove();
             }
+
+            // Refrescar UI si se solicita
+            if (refreshUI) {
+                console.log('🔄 loadDataFromStorage amb refreshUI=true, cridant refreshAllViews()');
+                refreshAllViews();
+            }
         }
 
         // Función para guardar datos en localStorage
@@ -2326,6 +2332,36 @@
             `;
 
             searchResultsContainer.innerHTML = html;
+        }
+
+        // Función centralizada para refrescar todas las vistas
+        function refreshAllViews() {
+            console.log('🔄 refreshAllViews() called');
+            console.log('📊 Datos actuals:', dadesAniversaris.length, 'aniversaris');
+
+            const mesSelector = document.getElementById('mesSelector');
+            const currentMonth = parseInt(mesSelector.value);
+            console.log('📅 Mes actual:', currentMonth);
+
+            // Refrescar vista actual (calendario o gráfico)
+            if (currentView === 'chart') {
+                console.log('📈 Refrescant gràfic...');
+                actualitzarGrafic(currentMonth);
+            } else {
+                console.log('📆 Refrescant calendari...');
+                renderCalendar(currentMonth, currentYear);
+            }
+
+            // Refrescar widgets dependientes
+            updateUpcomingBirthdays();
+            updateMonthStats(currentMonth);
+
+            // Si hay búsqueda activa, actualizar resultados
+            if (currentSearchTerm) {
+                renderSearchResults();
+            }
+
+            console.log('✅ refreshAllViews() completat');
         }
 
         // Función para renderizar calendario
@@ -2593,9 +2629,10 @@
                 const success = await updateBirthdayInSheet(oldBirthday, newBirthday);
                 if (success) {
                     // Recargar datos para refrescar rowNumbers
-                    await loadDataFromStorage();
+                    await loadDataFromStorage(true);
+                    showSyncMessage('✅ Canvis fets', false);
                 } else {
-                    // showSyncMessage('⚠️ Error al sincronitzar. Canvis guardats localment', true);
+                    showSyncMessage('⚠️ Error al sincronitzar. Canvis guardats localment', true);
                 }
             } else {
                 // Añadir a Google Sheets
@@ -2632,7 +2669,8 @@
                                 renderCalendar(parseInt(mesSelector.value), currentYear);
                                 updateUpcomingBirthdays();
                                 updateMonthStats(mesSelector.value);
-                                await loadDataFromStorage();
+                                await loadDataFromStorage(true);
+                                showSyncMessage('✅ Canvis fets', false);
                             } else {
                                 alert('Error al afegir aniversari: ' + (resultForzado?.error || 'Error desconegut'));
                             }
@@ -2646,7 +2684,8 @@
 
                 if (result && result.success) {
                     // Recargar datos para obtener rowNumber asignado
-                    await loadDataFromStorage();
+                    await loadDataFromStorage(true);
+                    showSyncMessage('✅ Canvis fets', false);
                 }
             }
         }
@@ -2682,12 +2721,18 @@
                 updateMonthStats(mesSelector.value);
 
                 // Sincronizar con Google Sheets en segundo plano
+                console.log('🗑️ Eliminant de Google Sheets:', deletedBirthday.nom);
                 const success = await deleteBirthdayFromSheet(deletedBirthday);
+                console.log('📝 Resultat eliminació:', success ? 'Èxit' : 'Error');
+
                 if (success) {
+                    console.log('📥 Recarregant dades de Google Sheets...');
                     // Recargar datos para refrescar rowNumbers después de eliminación
-                    await loadDataFromStorage();
+                    await loadDataFromStorage(true);
+                    console.log('✅ Dades recarregades i calendari refrescat');
+                    showSyncMessage('✅ Canvis fets', false);
                 } else {
-                    // showSyncMessage('⚠️ Error al sincronitzar. Canvis guardats localment', true);
+                    showSyncMessage('⚠️ Error al sincronitzar. Canvis guardats localment', true);
                 }
             }
         }
