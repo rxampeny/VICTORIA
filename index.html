@@ -1340,6 +1340,10 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="formAnyNaixement">Any de naixement</label>
+                    <input type="number" id="formAnyNaixement" min="1900" max="2025" placeholder="Ex: 1971">
+                </div>
+                <div class="form-group">
                     <label for="formTelefon">Telèfon</label>
                     <input type="text" id="formTelefon" placeholder="Opcional">
                 </div>
@@ -1362,6 +1366,9 @@
             <h3 id="detailsName"></h3>
             <div class="details-info">
                 <strong>📅 Data:</strong> <span id="detailsDate"></span>
+            </div>
+            <div class="details-info" id="detailsAgeContainer" style="display: none;">
+                <strong>🎂 Edat:</strong> <span id="detailsAge"></span>
             </div>
             <div class="details-info">
                 <strong>📞 Telèfon:</strong> <span id="detailsPhone"></span>
@@ -2086,6 +2093,15 @@
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+            // Buscar persona completa para obtener anyNaixement
+            const nextPerson = dadesAniversaris.find(d => d.nom === nextBday.nom && d.dia === nextBday.dia && d.mes === nextBday.mes);
+            let ageText = '';
+            if (nextPerson && nextPerson.anyNaixement) {
+                const nextBirthdayYear = nextBday.fecha.getFullYear();
+                const age = nextBirthdayYear - nextPerson.anyNaixement;
+                ageText = `<div style="font-size: 1rem; margin-top: 2px; opacity: 0.95;">🎂 Farà <strong>${age} anys</strong></div>`;
+            }
+
             const secondLine = secondBday ? `
                 <div style="background: rgba(255,255,255,0.2); padding: 6px; border-radius: 16px; margin-top: 5px; text-align: center; backdrop-filter: blur(10px);">
                     <div class="glow-text" style="font-size: 0.95rem; margin-bottom: 2px;">👉 Recordatori per part de:</div>
@@ -2101,6 +2117,7 @@
                     <div class="glow-text" style="font-size: 1.05rem; margin-bottom: 2px;">🎉 Pròxim aniversari:</div>
                     <div style="font-size: 1.2rem; font-weight: 700; margin: 2px 0;"><strong>${nextBday.nom}</strong></div>
                     <div style="font-size: 0.9rem; margin-top: 2px; opacity: 0.95;">${nextBday.dia} ${getMesName(nextBday.mes)}</div>
+                    ${ageText}
                     <div class="pulse-counter" style="font-size: 1.4rem; margin-top: 5px; font-weight: 700; display: inline-block;">⏳ ${days} dies, ${hours}h ${minutes}m ${seconds}s</div>
                 </div>
                 ${secondLine}
@@ -2170,6 +2187,19 @@
 
             // Restaurar display normal
             document.getElementById('detailsDate').parentElement.innerHTML = `<strong>📅 Data:</strong> <span id="detailsDate">${persona.dia} de ${getMesName(persona.mes)}</span>`;
+
+            // Mostrar edad si existe anyNaixement
+            const ageContainer = document.getElementById('detailsAgeContainer');
+            if (persona.anyNaixement) {
+                const nextBirthdayYear = birthdayDate.getFullYear();
+                const age = nextBirthdayYear - persona.anyNaixement;
+                const currentAge = today > birthdayThisYear ? age : age - 1;
+                document.getElementById('detailsAge').textContent = `${currentAge} anys (farà ${age} anys)`;
+                ageContainer.style.display = 'block';
+            } else {
+                ageContainer.style.display = 'none';
+            }
+
             document.getElementById('detailsPhone').parentElement.innerHTML = `<strong>📞 Telèfon:</strong> <span id="detailsPhone">${persona.telefon || 'No disponible'}</span>`;
             document.getElementById('detailsEmail').parentElement.innerHTML = `<strong>📧 Email:</strong> <span id="detailsEmail">${persona.email || 'No disponible'}</span>`;
             document.getElementById('detailsDays').parentElement.style.display = 'block';
@@ -2490,6 +2520,7 @@
             document.getElementById('formNom').value = '';
             document.getElementById('formDia').value = '';
             document.getElementById('formMes').value = '';
+            document.getElementById('formAnyNaixement').value = '';
             document.getElementById('formTelefon').value = '';
             document.getElementById('formEmail').value = '';
             document.getElementById('deleteBtn').classList.add('hidden');
@@ -2506,6 +2537,7 @@
             document.getElementById('formNom').value = currentEditingPerson.nom;
             document.getElementById('formDia').value = currentEditingPerson.dia;
             document.getElementById('formMes').value = currentEditingPerson.mes;
+            document.getElementById('formAnyNaixement').value = currentEditingPerson.anyNaixement || '';
             document.getElementById('formTelefon').value = currentEditingPerson.telefon || '';
             document.getElementById('formEmail').value = currentEditingPerson.email || '';
             document.getElementById('deleteBtn').classList.remove('hidden');
@@ -2544,6 +2576,7 @@
             const nom = document.getElementById('formNom').value.trim();
             const dia = parseInt(document.getElementById('formDia').value);
             const mes = parseInt(document.getElementById('formMes').value);
+            const anyNaixement = document.getElementById('formAnyNaixement').value ? parseInt(document.getElementById('formAnyNaixement').value) : null;
             let telefon = document.getElementById('formTelefon').value.trim();
             let email = document.getElementById('formEmail').value.trim();
 
@@ -2597,7 +2630,7 @@
             const isEditing = currentEditingIndex >= 0;
             const oldBirthday = isEditing ? { ...dadesAniversaris[currentEditingIndex] } : null; // Deep copy para preservar rowNumber
 
-            const newBirthday = { nom, dia, mes, telefon, email, genere: '' };
+            const newBirthday = { nom, dia, mes, anyNaixement, telefon, email, genere: '' };
 
             // Si está editando, preservar rowNumber y género del dato antiguo
             if (isEditing) {
@@ -2606,6 +2639,9 @@
                 }
                 if (oldBirthday.genere) {
                     newBirthday.genere = oldBirthday.genere;
+                }
+                if (oldBirthday.anyNaixement) {
+                    newBirthday.anyNaixement = oldBirthday.anyNaixement;
                 }
             }
 
